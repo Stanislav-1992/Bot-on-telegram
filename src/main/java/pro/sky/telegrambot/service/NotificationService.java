@@ -1,8 +1,8 @@
 package pro.sky.telegrambot.service;
 
 import pro.sky.telegrambot.exception.IncorrectMessageException;
+import pro.sky.telegrambot.model.Notification;
 
-import javax.management.Notification;
 import java.util.Optional;
 
 public interface NotificationService {

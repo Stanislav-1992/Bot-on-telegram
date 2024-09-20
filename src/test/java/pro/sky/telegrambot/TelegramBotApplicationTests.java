@@ -12,7 +12,6 @@ class TelegramBotApplicationTests {
 	@Autowired
 	NotificationTaskRepository notificationTaskRepository;
 
-	@SpyBean
 
 	@Test
 	void contextLoads() {

@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface NotificationTaskRepository extends JpaRepository<Notification,Long> {
-    List<Notification> findByNotificationDate(LocalDateTime localDateTime);
+    List<Notification> findByNotificationDate(LocalDateTime dateTime);
 }

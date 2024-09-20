@@ -6,9 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.exception.IncorrectMessageException;
+import pro.sky.telegrambot.model.Notification;
 import pro.sky.telegrambot.repository.NotificationTaskRepository;
-
-import javax.management.Notification;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -19,11 +18,12 @@ import java.util.regex.Pattern;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(NotificationServiceImpl.class);
+
+    private final Logger log = LoggerFactory.getLogger(NotificationServiceImpl.class);
     private static final String REGEX_MSG = "(\\d{2}\\.\\d{2}\\.\\d{4}\\s\\d{2}:\\d{2})(\\s+)(.+)";
 
     private final NotificationTaskRepository repository;
-    private TelegramBot telegramBot;
+    private final TelegramBot telegramBot;
 
     public NotificationServiceImpl(NotificationTaskRepository repository, TelegramBot telegramBot) {
         this.repository = repository;
@@ -31,14 +31,14 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void scheduledNotification(Notification notification, Long chatId) {
+    public void scheduledNotification(pro.sky.telegrambot.model.Notification notification, Long chatId) {
         notification.setChatId(chatId);
         Notification savedNotification = repository.save(notification);
-        logger.info("Notification " + savedNotification + " scheduled");
+        log.info("Notification {} scheduled", savedNotification);
     }
 
     @Override
-    Optional<Notification> parseMessage(String notificationBotMessage) throws IncorrectMessageException {
+    public Optional<Notification> parseMessage(String message) throws IncorrectMessageException {
         Notification notification = null;
         Pattern pattern = Pattern.compile(REGEX_MSG);
         Matcher matcher = pattern.matcher(message);
@@ -49,10 +49,10 @@ public class NotificationServiceImpl implements NotificationService {
                     DateTimeFormatter.ofPattern("dd.MM.yyy HH:mm"));
             if (notificationLocalDateTime.isAfter(LocalDateTime.now())) {
                 notification = new Notification(messageToSave, notificationLocalDateTime);
-                logger.info("Saving {} to DB", notification);
+                log.info("Saving {} to DB", notification);
                 repository.save(notification);
             } else{
-                logger.error("Date is incorrect");
+                log.error("Date is incorrect");
                 throw new IncorrectMessageException("Incorrect date");
             }
         }
@@ -66,17 +66,17 @@ public class NotificationServiceImpl implements NotificationService {
         notifications.forEach(task -> {
             sendMessage(task);
             task.setAsSent();
-            logger.info("Notification was sent {}", task);
+            log.info("Notification was sent {}", task);
         });
         repository.saveAll(notifications);
-        logger.info("Notification were saved");
+        log.info("Notification were saved");
     }
 
     @Override
     public void sendMessage(Long chatId, String messageText) {
         SendMessage sendMessage = new SendMessage(chatId, messageText);
         telegramBot.execute(sendMessage);
-        logger.info("Message was send: {}", messageText);
+        log.info("Message was send: {}", messageText);
     }
 
     @Override

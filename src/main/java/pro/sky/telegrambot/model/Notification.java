@@ -14,6 +14,7 @@ public class Notification {
     @Column(name = "chat_id")
     private Long chatId;
     private String message;
+    @Column(name = "notification_date")
     private LocalDateTime notificationDate;
     private LocalDateTime notificationSent;
 
@@ -41,32 +42,16 @@ public class Notification {
         return message;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
     public LocalDateTime getNotificationDate() {
         return notificationDate;
-    }
-
-    public void setNotificationDate(LocalDateTime notificationDate) {
-        this.notificationDate = notificationDate;
     }
 
     public LocalDateTime getNotificationSent() {
         return notificationSent;
     }
 
-    public void setNotificationSent(LocalDateTime notificationSent) {
-        this.notificationSent = notificationSent;
-    }
-
     public NotificationStatus getStatus() {
         return status;
-    }
-
-    public void setStatus(NotificationStatus status) {
-        this.status = status;
     }
 
     public void setAsSent() {
@@ -77,8 +62,7 @@ public class Notification {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Notification)) return false;
-        Notification that = (Notification) o;
+        if (!(o instanceof Notification that)) return false;
         return Objects.equals(id, that.id) && Objects.equals(getChatId(), that.getChatId()) &&
                 Objects.equals(getMessage(), that.getMessage()) &&
                 Objects.equals(getNotificationDate(), that.getNotificationDate()) &&
@@ -87,7 +71,7 @@ public class Notification {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, getChatId(), getMessage(), getNotificationDate(), getNotificationSent(), getStatus);
+        return Objects.hash(id, getChatId(), getMessage(), getNotificationDate(), getNotificationSent(), getStatus());
     }
 
     @Override
