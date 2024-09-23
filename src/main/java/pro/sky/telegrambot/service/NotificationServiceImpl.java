@@ -31,7 +31,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void scheduledNotification(pro.sky.telegrambot.model.Notification notification, Long chatId) {
+    public void scheduledNotification(Notification notification, Long chatId) {
         notification.setChatId(chatId);
         Notification savedNotification = repository.save(notification);
         log.info("Notification {} scheduled", savedNotification);

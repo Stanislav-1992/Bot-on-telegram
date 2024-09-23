@@ -15,13 +15,17 @@ import pro.sky.telegrambot.service.NotificationService;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static java.util.regex.Pattern.matches;
 import static pro.sky.telegrambot.util.CommandConst.*;
 
 @Service
 @EnableScheduling
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
-    Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
+    private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
 
     private final TelegramBot telegramBot;
     private final NotificationService notificationService;
@@ -48,10 +52,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             logger.info("Processing update: {}", update);
             Message message = update.message();
 
-            if (message.text().startsWith(START_CMD)) {
+            boolean textСhecking = message.text().matches("(\\D+)+([a-zA-Zа-яА-Я0-9]+)+(\\D+)");
+            System.out.println(textСhecking);
+
+            /*String messageText = update.message().text();
+            Long chatId = update.message().chat().id();*/
+            Pattern pattern = Pattern.compile("\\w");
+            Matcher matcher = pattern.matcher((CharSequence) message);
+
+            if (message.text().startsWith(START_CMD))  {
                 logger.info(START_CMD + " " + LocalDateTime.now());
                 notificationService.sendMessage(getChatId(message), WELCOME + message.from().firstName() + " ");
-                notificationService.sendMessage(getChatId(message), HELP_MSG);
+                //notificationService.sendMessage(getChatId(message), HELP_MSG);
             } else {
                 try {
                     notificationService.parseMessage(message.text()).ifPresentOrElse(
