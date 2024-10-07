@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS notification
     notification_date TIMESTAMP NOT NULL,
     message TEXT NOT NULL,
     status VARCHAR (255) NOT NULL DEFAULT 'SCHEDULED',
-    notification_date TIMESTAMP
 );
 
 CREATE INDEX notification_date_index ON notification (notification_date) WHERE status = 'SCHEDULED';

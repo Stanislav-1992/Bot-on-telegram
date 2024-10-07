@@ -2,88 +2,78 @@ package pro.sky.telegrambot.listener;
 
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
-import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
+import com.pengrad.telegrambot.request.SendMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.exception.IncorrectMessageException;
 import pro.sky.telegrambot.model.Notification;
-import pro.sky.telegrambot.service.NotificationService;
+import pro.sky.telegrambot.repository.NotificationTaskRepository;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.util.regex.Pattern.matches;
-import static pro.sky.telegrambot.util.CommandConst.*;
 
 @Service
-@EnableScheduling
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
 
     private final TelegramBot telegramBot;
-    private final NotificationService notificationService;
 
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, NotificationService notificationService) {
+    private final NotificationTaskRepository notificationTaskRepository;
+
+    Pattern pattern = Pattern.compile("(\\d{2}\\.\\d{2}\\.\\d{4}\\s\\d{2}:\\d{2})(\\s+)(.+)");
+
+    TelegramBotUpdatesListener(NotificationTaskRepository notificationTaskRepository, TelegramBot telegramBot) {
+        this.notificationTaskRepository = notificationTaskRepository;
         this.telegramBot = telegramBot;
-        this.notificationService = notificationService;
     }
+
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyy HH:mm");
 
     @PostConstruct
     public void init() {
         telegramBot.setUpdatesListener(this);
     }
 
-    @Scheduled(cron = "0 0/1 * * * *")
-    public void sendNotificationMessage(){
-        notificationService.sendNotificationMessage();
-    }
-
     @Override
     public int process(List<Update> updates) {
         updates.forEach(update -> {
-
             logger.info("Processing update: {}", update);
-            Message message = update.message();
-
-            boolean textСhecking = message.text().matches("(\\D+)+([a-zA-Zа-яА-Я0-9]+)+(\\D+)");
-            System.out.println(textСhecking);
-
-            /*String messageText = update.message().text();
-            Long chatId = update.message().chat().id();*/
-            Pattern pattern = Pattern.compile("\\w");
-            Matcher matcher = pattern.matcher((CharSequence) message);
-
-            if (message.text().startsWith(START_CMD))  {
-                logger.info(START_CMD + " " + LocalDateTime.now());
-                notificationService.sendMessage(getChatId(message), WELCOME + message.from().firstName() + " ");
-                //notificationService.sendMessage(getChatId(message), HELP_MSG);
-            } else {
-                try {
-                    notificationService.parseMessage(message.text()).ifPresentOrElse(
-                            task -> scheduledNotification(getChatId(message), task),
-                            () -> notificationService.sendMessage(getChatId(message), INVALID_MESSAGE)
-                    );
-                } catch (IncorrectMessageException i) {
-                    notificationService.sendMessage(getChatId(message),
-                            "Сообщение не соответствует требуемому формату!");
-                }
+            if (update.message().text().equals("/start")) {
+                telegramBot.execute(new SendMessage(update.message().chat().id(),
+                        "Hello " + update.message().chat().firstName()));
+                return;
+            } else if (update.message().text().equals("/stop")) {
+                telegramBot.execute(new SendMessage(update.message().chat().id(),
+                        "Goodbye " + update.message().chat().firstName()));
+                return;
+            } else if (update.message().text().equals("/delete/")) {
+                Notification notification = notificationTaskRepository.findById(update.message().chat().id())
+                        .orElseThrow(() -> new IncorrectMessageException("Notification not found"));
+                notificationTaskRepository.delete(notification);
             }
+            createNotification(update);
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
-    private void scheduledNotification(Long chatId, Notification notification) {
-        notificationService.scheduledNotification(notification, chatId);
-        notificationService.sendMessage(chatId, "The task:" + notification.getMessage() + "is created");
-    }
-    private long getChatId(Message message) {
-        return message.chat().id();
+    private void createNotification(Update update) {
+
+        Matcher matcher = pattern.matcher(update.message().text());
+        if (matcher.matches()) {
+            LocalDateTime dateTime = LocalDateTime.parse(matcher.group(1), dateTimeFormatter);
+            Notification notificationTask = new Notification();
+            notificationTask.setId(null);
+            notificationTask.setNotificationDate(dateTime);
+            notificationTask.setChatId(update.message().chat().id());
+            notificationTask.setMessage(matcher.group(3));
+            notificationTaskRepository.save(notificationTask);
+        }
     }
 }

@@ -16,12 +16,21 @@ public class Notification {
     private String message;
     @Column(name = "notification_date")
     private LocalDateTime notificationDate;
-    private LocalDateTime notificationSent;
 
-    @Enumerated(EnumType.STRING)
-    private NotificationStatus status = NotificationStatus.SCHEDULED;
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public Notification() {
+    }
+
+    public void setNotificationDate(LocalDateTime notificationDate) {
+        this.notificationDate = notificationDate;
     }
 
     public Notification(String notificationMessage, LocalDateTime notificationDate) {
@@ -46,32 +55,18 @@ public class Notification {
         return notificationDate;
     }
 
-    public LocalDateTime getNotificationSent() {
-        return notificationSent;
-    }
-
-    public NotificationStatus getStatus() {
-        return status;
-    }
-
-    public void setAsSent() {
-        this.status = NotificationStatus.SENT;
-        this.notificationSent = LocalDateTime.now();
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Notification that)) return false;
         return Objects.equals(id, that.id) && Objects.equals(getChatId(), that.getChatId()) &&
                 Objects.equals(getMessage(), that.getMessage()) &&
-                Objects.equals(getNotificationDate(), that.getNotificationDate()) &&
-                Objects.equals(getNotificationSent(), that.getNotificationSent());
+                Objects.equals(getNotificationDate(), that.getNotificationDate());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, getChatId(), getMessage(), getNotificationDate(), getNotificationSent(), getStatus());
+        return Objects.hash(id, getChatId(), getMessage(), getNotificationDate());
     }
 
     @Override
@@ -81,8 +76,8 @@ public class Notification {
                 ", chatId=" + chatId +
                 ", message='" + message + '\'' +
                 ", notificationDate=" + notificationDate +
-                ", notificationSent=" + notificationSent +
-                ", status=" + status +
+                ", notificationSent=" +
+                ", status=" +
                 '}';
     }
 }
