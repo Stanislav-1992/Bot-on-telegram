@@ -27,7 +27,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private final NotificationTaskRepository notificationTaskRepository;
 
-    Pattern pattern = Pattern.compile("(\\d{2}\\.\\d{2}\\.\\d{4}\\s\\d{2}:\\d{2})(\\s+)(.+)");
+    private final Pattern pattern = Pattern.compile("(\\d{2}\\.\\d{2}\\.\\d{4}\\s\\d{2}:\\d{2})(\\s+)(.+)");
+    private final Pattern patternText = Pattern.compile("\\w");
 
     TelegramBotUpdatesListener(NotificationTaskRepository notificationTaskRepository, TelegramBot telegramBot) {
         this.notificationTaskRepository = notificationTaskRepository;
@@ -45,20 +46,25 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
-            if (update.message().text().equals("/start")) {
-                telegramBot.execute(new SendMessage(update.message().chat().id(),
-                        "Hello " + update.message().chat().firstName()));
-                return;
-            } else if (update.message().text().equals("/stop")) {
-                telegramBot.execute(new SendMessage(update.message().chat().id(),
-                        "Goodbye " + update.message().chat().firstName()));
-                return;
-            } else if (update.message().text().equals("/delete/")) {
-                Notification notification = notificationTaskRepository.findById(update.message().chat().id())
-                        .orElseThrow(() -> new IncorrectMessageException("Notification not found"));
-                notificationTaskRepository.delete(notification);
+
+            Matcher matcherText = patternText.matcher(update.message().text());
+            if (matcherText.matches()) {
+                if (update.message().text().equals("/start")) {
+                    telegramBot.execute(new SendMessage(update.message().chat().id(),
+                            "Hello " + update.message().chat().firstName()));
+                    return;
+                } else if (update.message().text().equals("/stop")) {
+                    telegramBot.execute(new SendMessage(update.message().chat().id(),
+                            "Goodbye " + update.message().chat().firstName()));
+                    return;
+                } else if (update.message().text().equals("/delete/")) {
+                    Notification notification = notificationTaskRepository.findById(update.message().chat().id())
+                            .orElseThrow(() -> new IncorrectMessageException("Notification not found"));
+                    notificationTaskRepository.delete(notification);
+                }
+                createNotification(update);
             }
-            createNotification(update);
+            throw new IncorrectMessageException("В данном запросе отсутствует текст!");
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
@@ -69,7 +75,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         if (matcher.matches()) {
             LocalDateTime dateTime = LocalDateTime.parse(matcher.group(1), dateTimeFormatter);
             Notification notificationTask = new Notification();
-            notificationTask.setId(null);
             notificationTask.setNotificationDate(dateTime);
             notificationTask.setChatId(update.message().chat().id());
             notificationTask.setMessage(matcher.group(3));

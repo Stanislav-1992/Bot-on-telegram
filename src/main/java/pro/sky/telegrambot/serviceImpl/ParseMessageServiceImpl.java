@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 public class ParseMessageServiceImpl implements ParseMessageService {
 
-    private final Logger log = LoggerFactory.getLogger(NotificationServiceImpl.class);
+    private final Logger log = LoggerFactory.getLogger(ParseMessageServiceImpl.class);
     private static final String REGEX_MSG = "(\\d{2}\\.\\d{2}\\.\\d{4}\\s\\d{2}:\\d{2})(\\s+)(.+)";
 
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyy HH:mm");

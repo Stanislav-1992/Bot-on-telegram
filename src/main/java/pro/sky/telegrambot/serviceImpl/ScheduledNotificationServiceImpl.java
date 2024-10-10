@@ -8,7 +8,7 @@ import pro.sky.telegrambot.service.ScheduledNotificationService;
 
 public class ScheduledNotificationServiceImpl implements ScheduledNotificationService {
 
-    private final Logger log = LoggerFactory.getLogger(NotificationServiceImpl.class);
+    private final Logger log = LoggerFactory.getLogger(ScheduledNotificationServiceImpl.class);
 
     private final NotificationTaskRepository repository;
 

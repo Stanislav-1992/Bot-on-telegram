@@ -10,12 +10,9 @@ import pro.sky.telegrambot.service.NotificationService;
 @Component
 public class ScheduledTasks {
 
-    @Autowired
-    private TelegramBot telegramBot;
-
     private final NotificationService notificationService;
 
-    public ScheduledTasks(NotificationService notificationService) {
+    public ScheduledTasks(NotificationService notificationService, TelegramBot telegramBot) {
         this.notificationService = notificationService;
     }
 
