@@ -28,7 +28,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private final NotificationTaskRepository notificationTaskRepository;
 
     private final Pattern pattern = Pattern.compile("(\\d{2}\\.\\d{2}\\.\\d{4}\\s\\d{2}:\\d{2})(\\s+)(.+)");
-    private final Pattern patternText = Pattern.compile("\\w");
+    private final Pattern patternText = Pattern.compile("(\\D+)+([a-zA-Zа-яА-Я0-9]+)+(\\D+)");
 
     TelegramBotUpdatesListener(NotificationTaskRepository notificationTaskRepository, TelegramBot telegramBot) {
         this.notificationTaskRepository = notificationTaskRepository;
@@ -57,7 +57,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     telegramBot.execute(new SendMessage(update.message().chat().id(),
                             "Goodbye " + update.message().chat().firstName()));
                     return;
-                } else if (update.message().text().equals("/delete/")) {
+                } else if (update.message().text().equals("/delete")) {
                     Notification notification = notificationTaskRepository.findById(update.message().chat().id())
                             .orElseThrow(() -> new IncorrectMessageException("Notification not found"));
                     notificationTaskRepository.delete(notification);
